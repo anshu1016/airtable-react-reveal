@@ -4,8 +4,8 @@ import { demoRecords } from './demoData';
 
 // These would typically come from environment variables
 // For demo purposes, we'll use placeholder values
-const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '<BASE_ID_OF_THE_AIRTABLE_TABLE>';
-const AIRTABLE_API_TOKEN = import.meta.env.VITE_AIRTABLE_API_TOKEN || 'your_api_token_here';
+const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
+const AIRTABLE_API_TOKEN = import.meta.env.VITE_AIRTABLE_API_TOKEN || '';
 const TABLE_NAME = import.meta.env.VITE_TABLE_NAME || 'Imported Table';
 
 // Check if we have valid credentials (not placeholder values)
