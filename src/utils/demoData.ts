@@ -1,91 +1,112 @@
 import { AirtableRecord } from '../types/airtable';
 
-// Demo data for when Airtable credentials are not available
+// Demo property data for when Airtable credentials are not available
 export const demoRecords: AirtableRecord[] = [
   {
     id: 'rec1',
     fields: {
-      title: 'Mountain Landscape',
-      description: 'A breathtaking view of snow-capped mountains during golden hour. Perfect for nature photography and outdoor enthusiasts.',
-      category: 'Nature',
-      image: [{
-        url: 'https://images.unsplash.com/photo-1464822759844-d150ad6a4cf5?w=800&h=600&fit=crop',
-        filename: 'mountain-landscape.jpg'
-      }],
-      rating: 5,
-      location: 'Swiss Alps'
+      title: 'Luxury 3BHK Apartment',
+      summary: 'Spacious luxury apartment with modern amenities and premium finishes in prime location.',
+      bhk_type: '3BHK',
+      property_type: 'Apartment',
+      area_sqft: 1850,
+      location: 'Bandra West, Mumbai',
+      status: 'Available',
+      furnished_status: 'Fully Furnished',
+      price_estimate: '₹2.8 Cr',
+      amenities: ['Swimming Pool', 'Gym', 'Parking', 'Security', 'Garden'],
+      highlights: ['Sea View', 'Premium Location', 'Ready to Move'],
+      screenshot_refs: [{ url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80' }],
     },
-    createdTime: '2024-01-15T10:30:00.000Z'
+    createdTime: '2024-01-15T10:30:00.000Z',
   },
   {
     id: 'rec2',
     fields: {
-      title: 'Modern Architecture',
-      description: 'Contemporary building design featuring clean lines and glass facades. An example of minimalist urban architecture.',
-      category: 'Architecture',
-      image: [{
-        url: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop',
-        filename: 'modern-architecture.jpg'
-      }],
-      rating: 4,
-      location: 'New York City'
+      title: 'Modern 2BHK Villa',
+      summary: 'Contemporary villa with garden and excellent connectivity to major business districts.',
+      bhk_type: '2BHK',
+      property_type: 'Villa',
+      area_sqft: 1200,
+      location: 'Whitefield, Bangalore',
+      status: 'Under Construction',
+      furnished_status: 'Semi Furnished',
+      price_estimate: '₹1.5 Cr',
+      amenities: ['Clubhouse', 'Children Play Area', 'Jogging Track', 'Power Backup'],
+      highlights: ['Gated Community', 'Green Surroundings', 'IT Hub Proximity'],
+      screenshot_refs: [{ url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80' }],
     },
-    createdTime: '2024-01-20T14:15:00.000Z'
+    createdTime: '2024-01-14T14:20:00.000Z',
   },
   {
     id: 'rec3',
     fields: {
-      title: 'Ocean Sunset',
-      description: 'Stunning sunset over the Pacific Ocean with vibrant orange and purple hues reflecting on the water.',
-      category: 'Nature',
-      image: [{
-        url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
-        filename: 'ocean-sunset.jpg'
-      }],
-      rating: 5,
-      location: 'California Coast'
+      title: 'Premium 4BHK Penthouse',
+      summary: 'Luxurious penthouse with panoramic city views and top-tier amenities.',
+      bhk_type: '4BHK',
+      property_type: 'Penthouse',
+      area_sqft: 3200,
+      location: 'Cyber City, Gurgaon',
+      status: 'Available',
+      furnished_status: 'Fully Furnished',
+      price_estimate: '₹4.2 Cr',
+      amenities: ['Private Terrace', 'Home Theater', 'Wine Cellar', 'Concierge'],
+      highlights: ['Sky Lounge', 'Premium Finishes', 'Smart Home Features'],
+      screenshot_refs: [{ url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80' }],
     },
-    createdTime: '2024-01-25T18:45:00.000Z'
+    createdTime: '2024-01-13T09:15:00.000Z',
   },
   {
     id: 'rec4',
     fields: {
-      title: 'Coffee Shop Interior',
-      description: 'Cozy coffee shop with warm lighting, wooden furniture, and a welcoming atmosphere for remote work.',
-      category: 'Interior',
-      rating: 4,
-      location: 'Portland, Oregon'
+      title: 'Cozy 1BHK Studio',
+      summary: 'Compact yet comfortable studio apartment perfect for young professionals.',
+      bhk_type: '1BHK',
+      property_type: 'Studio',
+      area_sqft: 650,
+      location: 'Koramangala, Bangalore',
+      status: 'Sold',
+      furnished_status: 'Unfurnished',
+      price_estimate: '₹85 L',
+      amenities: ['Elevator', 'Security', 'Power Backup', 'Gym'],
+      highlights: ['Metro Connectivity', 'IT Hub', 'Shopping Centers Nearby'],
+      screenshot_refs: [{ url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80' }],
     },
-    createdTime: '2024-02-01T09:20:00.000Z'
+    createdTime: '2024-01-12T16:45:00.000Z',
   },
   {
     id: 'rec5',
     fields: {
-      title: 'Urban Street Art',
-      description: 'Vibrant mural showcasing local culture and artistic expression in the downtown district.',
-      category: 'Art',
-      image: [{
-        url: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop',
-        filename: 'street-art.jpg'
-      }],
-      rating: 4,
-      location: 'Berlin, Germany'
+      title: 'Spacious 5BHK Bungalow',
+      summary: 'Independent bungalow with large garden and traditional architecture.',
+      bhk_type: '5BHK',
+      property_type: 'Bungalow',
+      area_sqft: 4500,
+      location: 'Juhu, Mumbai',
+      status: 'Available',
+      furnished_status: 'Semi Furnished',
+      price_estimate: '₹8.5 Cr',
+      amenities: ['Private Garden', 'Servant Quarters', 'Parking for 4 Cars', 'Swimming Pool'],
+      highlights: ['Beach Proximity', 'Prime Location', 'Independent House'],
+      screenshot_refs: [{ url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80' }],
     },
-    createdTime: '2024-02-05T16:30:00.000Z'
+    createdTime: '2024-01-11T11:30:00.000Z',
   },
   {
     id: 'rec6',
     fields: {
-      title: 'Forest Trail',
-      description: 'Peaceful hiking trail through old-growth forest with dappled sunlight filtering through the canopy.',
-      category: 'Nature',
-      image: [{
-        url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
-        filename: 'forest-trail.jpg'
-      }],
-      rating: 5,
-      location: 'Pacific Northwest'
+      title: 'Modern 2BHK Flat',
+      summary: 'Well-designed flat with excellent amenities and strategic location.',
+      bhk_type: '2BHK',
+      property_type: 'Flat',
+      area_sqft: 1100,
+      location: 'Sector 62, Noida',
+      status: 'Available',
+      furnished_status: 'Fully Furnished',
+      price_estimate: '₹1.2 Cr',
+      amenities: ['Club House', 'Swimming Pool', 'Gym', 'Children Play Area'],
+      highlights: ['Metro Station Nearby', 'Shopping Mall', 'School Proximity'],
     },
-    createdTime: '2024-02-10T11:00:00.000Z'
-  }
+    createdTime: '2024-01-10T08:20:00.000Z',
+  },
 ];
