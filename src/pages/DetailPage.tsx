@@ -6,6 +6,7 @@ import { ErrorMessage } from '../components/ui/error-message';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { useAirtable } from '../context/AirtableContext';
 import { useAirtableAPI } from '../hooks/useAirtableAPI';
+import { AmenitiesForm } from '../components/amenities-form';
 import { Calendar, ExternalLink } from 'lucide-react';
 
 export const DetailPage: React.FC = () => {
@@ -179,21 +180,14 @@ export const DetailPage: React.FC = () => {
                 </div>
               )}
 
-              {amenities.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-card-foreground mb-3">
-                    Amenities
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center p-2 bg-muted/30 rounded">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span className="text-sm">{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <AmenitiesForm 
+                currentAmenities={amenities}
+                onUpdate={(newAmenities) => {
+                  // TODO: Implement API call to update amenities
+                  console.log('Updating amenities:', newAmenities);
+                }}
+                recordId={record.id}
+              />
 
               {highlights.length > 0 && (
                 <div>

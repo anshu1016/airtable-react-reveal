@@ -99,7 +99,7 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
       
       <CardFooter className="pt-2 pb-4 flex-shrink-0">
         <div className="flex items-center justify-between w-full">
-          {priceEstimate && priceEstimate !== 'unknown' && (
+          {priceEstimate && priceEstimate !== 'TBD' && (
             <span className="text-lg font-bold text-primary">
               {priceEstimate}
             </span>
