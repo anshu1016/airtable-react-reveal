@@ -16,13 +16,19 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
     navigate(`/details/${record.id}`);
   };
 
-  // Extract common fields - adjust these based on your actual Airtable fields
-  const title = record.fields.title || record.fields.Title || record.fields.name || record.fields.Name || 'Untitled';
-  const description = record.fields.description || record.fields.Description || record.fields.notes || record.fields.Notes || '';
-  const image = record.fields.image || record.fields.Image || record.fields.photo || record.fields.Photo;
+  // Extract property-specific fields
+  const title = record.fields.title || 'Untitled Property';
+  const summary = record.fields.summary || '';
+  const bhkType = record.fields.bhk_type || '';
+  const propertyType = record.fields.property_type || '';
+  const location = record.fields.location || '';
+  const priceEstimate = record.fields.price_estimate || '';
+  const status = record.fields.status || '';
+  const areaSize = record.fields.area_sqft || '';
+  const screenshots = record.fields.screenshot_refs;
   
   // Handle image URL - Airtable images are usually arrays with attachment objects
-  const imageUrl = Array.isArray(image) && image.length > 0 ? image[0].url : null;
+  const imageUrl = Array.isArray(screenshots) && screenshots.length > 0 ? screenshots[0].url : null;
 
   return (
     <Card 
@@ -45,24 +51,55 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
       )}
       
       <CardHeader className="pb-2">
-        <h3 className="font-semibold text-card-foreground line-clamp-2 group-hover:text-primary transition-colors">
-          {title}
-        </h3>
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="font-semibold text-card-foreground line-clamp-2 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+          {status && (
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+              status === 'Available' ? 'bg-green-100 text-green-700' :
+              status === 'Sold' ? 'bg-red-100 text-red-700' :
+              'bg-yellow-100 text-yellow-700'
+            }`}>
+              {status}
+            </span>
+          )}
+        </div>
+        {bhkType && propertyType && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-medium">{bhkType}</span>
+            <span>•</span>
+            <span>{propertyType}</span>
+            {areaSize && (
+              <>
+                <span>•</span>
+                <span>{areaSize} sqft</span>
+              </>
+            )}
+          </div>
+        )}
       </CardHeader>
       
-      {description && (
-        <CardContent className="pb-2">
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {description}
+      <CardContent className="pb-2 space-y-2">
+        {summary && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {summary}
           </p>
-        </CardContent>
-      )}
+        )}
+        {location && (
+          <p className="text-sm text-primary font-medium">
+            📍 {location}
+          </p>
+        )}
+      </CardContent>
       
       <CardFooter className="pt-2 pb-4">
         <div className="flex items-center justify-between w-full">
-          <span className="text-xs text-muted-foreground">
-            {new Date(record.createdTime).toLocaleDateString()}
-          </span>
+          {priceEstimate && (
+            <span className="text-lg font-bold text-primary">
+              {priceEstimate}
+            </span>
+          )}
           <div className="w-0 h-0.5 bg-gradient-primary group-hover:w-8 transition-all duration-300" />
         </div>
       </CardFooter>

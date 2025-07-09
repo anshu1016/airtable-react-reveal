@@ -69,16 +69,19 @@ export const DetailPage: React.FC = () => {
   }
 
   const record = state.selectedRecord;
-  const title = record.fields.title || record.fields.Title || record.fields.name || record.fields.Name || 'Untitled';
-  const description = record.fields.description || record.fields.Description || record.fields.notes || record.fields.Notes || '';
-  const image = record.fields.image || record.fields.Image || record.fields.photo || record.fields.Photo;
-  const imageUrl = Array.isArray(image) && image.length > 0 ? image[0].url : null;
-
-  // Get all fields except common ones for the details section
-  const excludedFields = ['title', 'Title', 'name', 'Name', 'description', 'Description', 'notes', 'Notes', 'image', 'Image', 'photo', 'Photo'];
-  const additionalFields = Object.entries(record.fields).filter(
-    ([key]) => !excludedFields.includes(key)
-  );
+  const title = record.fields.title || 'Untitled Property';
+  const summary = record.fields.summary || '';
+  const bhkType = record.fields.bhk_type || '';
+  const propertyType = record.fields.property_type || '';
+  const location = record.fields.location || '';
+  const priceEstimate = record.fields.price_estimate || '';
+  const status = record.fields.status || '';
+  const furnishedStatus = record.fields.furnished_status || '';
+  const areaSize = record.fields.area_sqft || '';
+  const amenities = record.fields.amenities || [];
+  const highlights = record.fields.highlights || [];
+  const screenshots = record.fields.screenshot_refs;
+  const imageUrl = Array.isArray(screenshots) && screenshots.length > 0 ? screenshots[0].url : null;
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -97,75 +100,109 @@ export const DetailPage: React.FC = () => {
             )}
             
             <CardHeader className="pb-6">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-card-foreground mb-2">
                     {title}
                   </h1>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Created: {new Date(record.createdTime).toLocaleDateString()}
+                  <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground mb-3">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {new Date(record.createdTime).toLocaleDateString()}
+                    </div>
+                    {status && (
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        status === 'Available' ? 'bg-green-100 text-green-700' :
+                        status === 'Sold' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {status}
+                      </span>
+                    )}
                   </div>
+                  {location && (
+                    <p className="text-primary font-medium text-lg">
+                      📍 {location}
+                    </p>
+                  )}
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                    ID: {record.id}
-                  </span>
-                </div>
+                {priceEstimate && (
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-primary">
+                      {priceEstimate}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardHeader>
             
             <CardContent className="space-y-6">
-              {description && (
+              {/* Property Details */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {bhkType && (
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <div className="text-sm text-muted-foreground">Type</div>
+                    <div className="font-semibold text-card-foreground">{bhkType}</div>
+                  </div>
+                )}
+                {propertyType && (
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <div className="text-sm text-muted-foreground">Property</div>
+                    <div className="font-semibold text-card-foreground">{propertyType}</div>
+                  </div>
+                )}
+                {areaSize && (
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <div className="text-sm text-muted-foreground">Area</div>
+                    <div className="font-semibold text-card-foreground">{areaSize} sqft</div>
+                  </div>
+                )}
+                {furnishedStatus && (
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <div className="text-sm text-muted-foreground">Furnished</div>
+                    <div className="font-semibold text-card-foreground">{furnishedStatus}</div>
+                  </div>
+                )}
+              </div>
+
+              {summary && (
                 <div>
                   <h3 className="text-lg font-semibold text-card-foreground mb-3">
-                    Description
+                    Summary
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    {description}
+                    {summary}
                   </p>
                 </div>
               )}
-              
-              {additionalFields.length > 0 && (
+
+              {amenities.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-card-foreground mb-4">
-                    Additional Information
+                  <h3 className="text-lg font-semibold text-card-foreground mb-3">
+                    Amenities
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {additionalFields.map(([key, value]) => (
-                      <div key={key} className="p-4 bg-muted/30 rounded-lg">
-                        <dt className="text-sm font-medium text-card-foreground mb-1 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </dt>
-                        <dd className="text-sm text-muted-foreground">
-                          {typeof value === 'object' ? (
-                            Array.isArray(value) ? (
-                              value.map((item, index) => (
-                                <div key={index} className="mb-1">
-                                  {typeof item === 'object' && item.url ? (
-                                    <a 
-                                      href={item.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center text-primary hover:underline"
-                                    >
-                                      {item.filename || 'View File'}
-                                      <ExternalLink className="w-3 h-3 ml-1" />
-                                    </a>
-                                  ) : (
-                                    String(item)
-                                  )}
-                                </div>
-                              ))
-                            ) : (
-                              JSON.stringify(value)
-                            )
-                          ) : (
-                            String(value)
-                          )}
-                        </dd>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {amenities.map((amenity, index) => (
+                      <div key={index} className="flex items-center p-2 bg-muted/30 rounded">
+                        <span className="text-green-600 mr-2">✓</span>
+                        <span className="text-sm">{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {highlights.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-card-foreground mb-3">
+                    Key Highlights
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {highlights.map((highlight, index) => (
+                      <div key={index} className="flex items-center p-2 bg-primary/10 rounded">
+                        <span className="text-primary mr-2">★</span>
+                        <span className="text-sm font-medium">{highlight}</span>
                       </div>
                     ))}
                   </div>
