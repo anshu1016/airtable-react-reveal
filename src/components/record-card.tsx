@@ -24,7 +24,8 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
   const location = Array.isArray(record.fields['Attachment Summary']) 
     ? record.fields['Attachment Summary'].join(', ') 
     : record.fields['Attachment Summary'] || '';
-  const priceEstimate = record.fields.price_estimate || '';
+  // const priceEstimate = record.fields.price_estimate || '';
+  const priceEstimate = 'TBD'
   const status = record.fields['status 2'] || '';
   const areaSize = record.fields.Attachments || '';
   const screenshots = record.fields.screenshot_refs;
