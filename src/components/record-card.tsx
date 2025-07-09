@@ -17,18 +17,20 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
   };
 
   // Extract property-specific fields
-  const title = record.fields.title || 'Untitled Property';
-  const summary = record.fields.summary || '';
-  const bhkType = record.fields.bhk_type || '';
-  const propertyType = record.fields.property_type || '';
-  const location = record.fields.location || '';
+  const title = record.fields.Name || 'Untitled Property';
+  const summary = record.fields.Notes || '';
+  const bhkType = record.fields.Assignee || '';
+  const propertyType = record.fields.Status || '';
+  const location = Array.isArray(record.fields['Attachment Summary']) 
+    ? record.fields['Attachment Summary'].join(', ') 
+    : record.fields['Attachment Summary'] || '';
   const priceEstimate = record.fields.price_estimate || '';
-  const status = record.fields.status || '';
-  const areaSize = record.fields.area_sqft || '';
+  const status = record.fields['status 2'] || '';
+  const areaSize = record.fields.Attachments || '';
   const screenshots = record.fields.screenshot_refs;
   
-  // Handle image URL - Airtable images are usually arrays with attachment objects
-  const imageUrl = Array.isArray(screenshots) && screenshots.length > 0 ? screenshots[0].url : null;
+  // Handle image URL - for now using placeholder since screenshots are filenames
+  const imageUrl = screenshots ? `https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80` : null;
 
   return (
     <Card 
