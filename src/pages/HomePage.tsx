@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Header } from '../components/header';
 import { RecordsGrid } from '../components/records-grid';
 import { SetupInstructions } from '../components/setup-instructions';
+import { VideoUploadModal } from '../components/video-upload-modal';
 import { useAirtableAPI } from '../hooks/useAirtableAPI';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 export const HomePage: React.FC = () => {
   const { fetchRecords } = useAirtableAPI();
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Check if using demo data
   const isUsingDemoData = !import.meta.env.VITE_AIRTABLE_BASE_ID || 
@@ -61,6 +64,21 @@ export const HomePage: React.FC = () => {
         </div>
         <RecordsGrid />
       </main>
+
+      {/* Floating Action Button */}
+      <Button
+        onClick={() => setIsUploadModalOpen(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl z-50"
+        size="icon"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      {/* Video Upload Modal */}
+      <VideoUploadModal 
+        open={isUploadModalOpen} 
+        onOpenChange={setIsUploadModalOpen} 
+      />
     </div>
   );
 };
