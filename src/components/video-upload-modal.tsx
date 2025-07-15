@@ -86,14 +86,30 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     setSelectedFile(null);
   };
 
+  const handleCancel = () => {
+    setSelectedFile(null);
+    setWebhookUrl('');
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Upload Video</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Upload Video Content</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Instructions */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Upload Guidelines</h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <li>• Upload videos up to 30 seconds only</li>
+              <li>• No background music or audio tracks</li>
+              <li>• Supported formats: MP4, MOV, AVI, WebM</li>
+            </ul>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="webhook-url">N8N Webhook URL</Label>
             <Input
@@ -106,33 +122,44 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="video-upload">Select Video File</Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+            <Label>Video File</Label>
+            <div className="space-y-3">
               {selectedFile ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="text-sm font-medium">{selectedFile.name}</span>
+                <div className="border border-border rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Upload className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleRemoveFile}
-                      className="h-6 w-6 p-0"
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                  </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to select a video file
-                  </p>
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                  <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Choose a video file</p>
+                    <p className="text-xs text-muted-foreground">
+                      Drag & drop or click to browse
+                    </p>
+                  </div>
                 </div>
               )}
+              
               <Input
                 id="video-upload"
                 type="file"
@@ -140,22 +167,37 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <Label
-                htmlFor="video-upload"
-                className="cursor-pointer absolute inset-0"
-              />
+              
+              {!selectedFile && (
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('video-upload')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Select Video File
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button 
               onClick={handleUpload} 
               disabled={!selectedFile || !webhookUrl || isUploading}
+              className="min-w-[120px]"
             >
-              {isUploading ? 'Uploading...' : 'Upload Video'}
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                'Upload Video'
+              )}
             </Button>
           </div>
         </div>
