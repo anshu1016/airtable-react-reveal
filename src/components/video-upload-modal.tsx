@@ -23,12 +23,12 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('video/')) {
+      if (file.type.startsWith('audio/')) {
         setSelectedFile(file);
       } else {
         toast({
           title: "Invalid file type",
-          description: "Please select a video file",
+          description: "Please select an audio file (MP3 or WAV)",
           variant: "destructive",
         });
       }
@@ -39,7 +39,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     if (!selectedFile || !webhookUrl) {
       toast({
         title: "Missing information",
-        description: "Please select a video file and enter webhook URL",
+        description: "Please select an audio file and enter webhook URL",
         variant: "destructive",
       });
       return;
@@ -49,7 +49,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append('video', selectedFile);
+      formData.append('audio', selectedFile);
       formData.append('filename', selectedFile.name);
       formData.append('size', selectedFile.size.toString());
       formData.append('type', selectedFile.type);
@@ -63,7 +63,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
       toast({
         title: "Upload initiated",
-        description: "Video upload request sent to webhook. Check your n8n workflow for processing status.",
+        description: "Audio upload request sent to webhook. Check your n8n workflow for processing status.",
       });
 
       // Reset form
@@ -74,7 +74,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload video. Please check the webhook URL and try again.",
+        description: "Failed to upload audio. Please check the webhook URL and try again.",
         variant: "destructive",
       });
     } finally {
@@ -96,7 +96,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Upload Video Content</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Upload Audio Content</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -104,9 +104,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Upload Guidelines</h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Upload videos up to 30 seconds only</li>
-              <li>• No background music or audio tracks</li>
-              <li>• Supported formats: MP4, MOV, AVI, WebM</li>
+              <li>• Upload audio files up to 30 seconds only</li>
+              <li>• No background music or additional audio tracks</li>
+              <li>• Supported formats: MP3, WAV</li>
             </ul>
           </div>
 
@@ -122,7 +122,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label>Video File</Label>
+            <Label>Audio File</Label>
             <div className="space-y-3">
               {selectedFile ? (
                 <div className="border border-border rounded-lg p-4">
@@ -152,7 +152,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                 <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
                   <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Choose a video file</p>
+                    <p className="text-sm font-medium">Choose an audio file</p>
                     <p className="text-xs text-muted-foreground">
                       Drag & drop or click to browse
                     </p>
@@ -161,9 +161,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               )}
               
               <Input
-                id="video-upload"
+                id="audio-upload"
                 type="file"
-                accept="video/*"
+                accept="audio/mp3,audio/wav,.mp3,.wav"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -171,11 +171,11 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               {!selectedFile && (
                 <Button
                   variant="outline"
-                  onClick={() => document.getElementById('video-upload')?.click()}
+                  onClick={() => document.getElementById('audio-upload')?.click()}
                   className="w-full"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Select Video File
+                  Select Audio File
                 </Button>
               )}
             </div>
@@ -196,7 +196,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                   Uploading...
                 </>
               ) : (
-                'Upload Video'
+                'Upload Audio'
               )}
             </Button>
           </div>
