@@ -96,8 +96,8 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     };
 
     const params = {
-      timestamp: timestamp,
-      resource_type: 'video'
+      resource_type: 'video',
+      timestamp: timestamp
     };
 
     const signature = createSignature(params, CLOUDINARY_CONFIG.apiSecret);
@@ -113,7 +113,8 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       timestamp,
       api_key: CLOUDINARY_CONFIG.apiKey,
       signature,
-      resource_type: 'video'
+      resource_type: 'video',
+      stringToSign: `resource_type=video&timestamp=${timestamp}`
     });
 
     const response = await fetch(
