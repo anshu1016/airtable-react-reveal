@@ -18,7 +18,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [cloudinaryUrl, setCloudinaryUrl] = useState('');
+  const [cloudinaryData, setCloudinaryData] = useState<{ url: string; folder: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'upload' | 'submit'>('upload');
   const { toast } = useToast();
@@ -82,8 +82,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     }
   };
 
-  const uploadToCloudinary = async (file: File): Promise<string> => {
+  const uploadToCloudinary = async (file: File): Promise<{ url: string; folder: string }> => {
     const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'video-uploads'; // Create a specific folder for videos
     
     // Create signature for signed upload using SHA1
     const createSignature = (params: Record<string, any>, secret: string) => {
@@ -95,7 +96,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       return CryptoJS.SHA1(sortedParams + secret).toString();
     };
 
+    // Parameters that will be included in the signature
     const params = {
+      folder: folder,
       resource_type: 'video',
       timestamp: timestamp
     };
@@ -104,17 +107,19 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('folder', folder);
     formData.append('timestamp', timestamp.toString());
     formData.append('api_key', CLOUDINARY_CONFIG.apiKey);
     formData.append('signature', signature);
     formData.append('resource_type', 'video');
 
     console.log('Uploading to Cloudinary with params:', {
+      folder,
       timestamp,
       api_key: CLOUDINARY_CONFIG.apiKey,
       signature,
       resource_type: 'video',
-      stringToSign: `resource_type=video&timestamp=${timestamp}`
+      stringToSign: `folder=${folder}&resource_type=video&timestamp=${timestamp}`
     });
 
     const response = await fetch(
@@ -133,7 +138,10 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
     const data = await response.json();
     console.log('Cloudinary success:', data);
-    return data.secure_url;
+    return {
+      url: data.secure_url,
+      folder: folder
+    };
   };
 
   const handleUpload = async () => {
@@ -149,8 +157,8 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     setIsUploading(true);
 
     try {
-      const cloudinaryVideoUrl = await uploadToCloudinary(selectedFile);
-      setCloudinaryUrl(cloudinaryVideoUrl);
+      const cloudinaryResult = await uploadToCloudinary(selectedFile);
+      setCloudinaryData(cloudinaryResult);
       setStep('submit');
       
       toast({
@@ -170,7 +178,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   };
 
   const handleGetData = async () => {
-    if (!cloudinaryUrl) {
+    if (!cloudinaryData?.url) {
       toast({
         title: "No video URL",
         description: "Please upload a video first",
@@ -188,7 +196,8 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          videoUrl: cloudinaryUrl
+          videoUrl: cloudinaryData.url,
+          folder: cloudinaryData.folder
         }),
       });
 
@@ -221,7 +230,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
   const handleCancel = () => {
     setSelectedFile(null);
-    setCloudinaryUrl('');
+    setCloudinaryData(null);
     setStep('upload');
     onOpenChange(false);
   };
@@ -343,18 +352,27 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                   <Label>Cloudinary Video URL</Label>
                   <div className="flex space-x-2">
                     <Input
-                      value={cloudinaryUrl}
+                      value={cloudinaryData?.url || ''}
                       readOnly
                       className="bg-muted"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigator.clipboard.writeText(cloudinaryUrl)}
+                      onClick={() => cloudinaryData?.url && navigator.clipboard.writeText(cloudinaryData.url)}
                     >
                       <Link className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Folder</Label>
+                  <Input
+                    value={cloudinaryData?.folder || ''}
+                    readOnly
+                    className="bg-muted"
+                  />
                 </div>
               </div>
 
