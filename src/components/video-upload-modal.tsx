@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Upload, X, Video, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import CryptoJS from 'crypto-js';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -82,10 +83,38 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   };
 
   const uploadToCloudinary = async (file: File): Promise<string> => {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    
+    // Create signature for signed upload using SHA1
+    const createSignature = (params: Record<string, any>, secret: string) => {
+      const sortedParams = Object.keys(params)
+        .sort()
+        .map(key => `${key}=${params[key]}`)
+        .join('&');
+      
+      return CryptoJS.SHA1(sortedParams + secret).toString();
+    };
+
+    const params = {
+      timestamp: timestamp,
+      resource_type: 'video'
+    };
+
+    const signature = createSignature(params, CLOUDINARY_CONFIG.apiSecret);
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'ml_default'); // You might need to create an unsigned upload preset
+    formData.append('timestamp', timestamp.toString());
+    formData.append('api_key', CLOUDINARY_CONFIG.apiKey);
+    formData.append('signature', signature);
     formData.append('resource_type', 'video');
+
+    console.log('Uploading to Cloudinary with params:', {
+      timestamp,
+      api_key: CLOUDINARY_CONFIG.apiKey,
+      signature,
+      resource_type: 'video'
+    });
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/video/upload`,
@@ -96,10 +125,13 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     );
 
     if (!response.ok) {
-      throw new Error('Failed to upload to Cloudinary');
+      const errorData = await response.json();
+      console.error('Cloudinary error:', errorData);
+      throw new Error(`Cloudinary upload failed: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
+    console.log('Cloudinary success:', data);
     return data.secure_url;
   };
 
