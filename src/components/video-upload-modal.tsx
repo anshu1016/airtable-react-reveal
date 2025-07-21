@@ -3,9 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Upload, X, Video, Link } from 'lucide-react';
+import { X, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import CryptoJS from 'crypto-js';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -18,17 +17,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [cloudinaryData, setCloudinaryData] = useState<{ url: string; folder: string } | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [step, setStep] = useState<'upload' | 'submit'>('upload');
   const { toast } = useToast();
-
-  // Cloudinary config
-  const CLOUDINARY_CONFIG = {
-    cloudName: 'df9d8klxs',
-    apiKey: '282589174689254',
-    apiSecret: 'qJd8KNvp8PvQmFVvCIVs9ewcR3c'
-  };
 
   const checkVideoDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
@@ -82,69 +71,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     }
   };
 
-  const uploadToCloudinary = async (file: File): Promise<{ url: string; folder: string }> => {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    const folder = 'video-uploads'; // Create a specific folder for videos
-    
-    // Create signature for signed upload using SHA1
-    const createSignature = (params: Record<string, any>, secret: string) => {
-      const sortedParams = Object.keys(params)
-        .sort()
-        .map(key => `${key}=${params[key]}`)
-        .join('&');
-      
-      return CryptoJS.SHA1(sortedParams + secret).toString();
-    };
-
-    // Parameters that will be included in the signature
-    const params = {
-      folder: folder,
-      resource_type: 'video',
-      timestamp: timestamp
-    };
-
-    const signature = createSignature(params, CLOUDINARY_CONFIG.apiSecret);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', folder);
-    formData.append('timestamp', timestamp.toString());
-    formData.append('api_key', CLOUDINARY_CONFIG.apiKey);
-    formData.append('signature', signature);
-    formData.append('resource_type', 'video');
-
-    console.log('Uploading to Cloudinary with params:', {
-      folder,
-      timestamp,
-      api_key: CLOUDINARY_CONFIG.apiKey,
-      signature,
-      resource_type: 'video',
-      stringToSign: `folder=${folder}&resource_type=video&timestamp=${timestamp}`
-    });
-
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/video/upload`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Cloudinary error:', errorData);
-      throw new Error(`Cloudinary upload failed: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
-    console.log('Cloudinary success:', data);
-    return {
-      url: data.secure_url,
-      folder: folder
-    };
-  };
-
-  const handleUpload = async () => {
+  const handleSend = async () => {
     if (!selectedFile) {
       toast({
         title: "No file selected",
@@ -157,70 +84,34 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     setIsUploading(true);
 
     try {
-      const cloudinaryResult = await uploadToCloudinary(selectedFile);
-      setCloudinaryData(cloudinaryResult);
-      setStep('submit');
-      
-      toast({
-        title: "Upload successful",
-        description: "Video uploaded to Cloudinary successfully!",
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload video to Cloudinary. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+      const formData = new FormData();
+      formData.append('video', selectedFile);
 
-  const handleGetData = async () => {
-    if (!cloudinaryData?.url) {
-      toast({
-        title: "No video URL",
-        description: "Please upload a video first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const response = await fetch('https://video-audio-mvp-1.onrender.com/', {
+      const response = await fetch('https://web-production-4bfe8.up.railway.app/upload-video', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoUrl: cloudinaryData.url,
-          folder: cloudinaryData.folder
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process video');
+        throw new Error('Failed to upload video');
       }
 
       toast({
-        title: "Processing initiated",
-        description: "Video sent for processing successfully!",
+        title: "Video processed successfully!",
+        description: "Go to home screen to see your results.",
       });
 
       // Reset and close modal
       handleCancel();
     } catch (error) {
-      console.error('Processing error:', error);
+      console.error('Upload error:', error);
       toast({
-        title: "Processing failed",
-        description: "Failed to send video for processing. Please try again.",
+        title: "Upload failed",
+        description: "Failed to upload video. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsProcessing(false);
+      setIsUploading(false);
     }
   };
 
@@ -230,8 +121,6 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
   const handleCancel = () => {
     setSelectedFile(null);
-    setCloudinaryData(null);
-    setStep('upload');
     onOpenChange(false);
   };
 
@@ -240,163 +129,100 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            {step === 'upload' ? 'Upload Video Content' : 'Video Processing'}
+            Upload Video Content
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
-          {step === 'upload' ? (
-            <>
-              {/* Instructions */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Upload Guidelines</h4>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                  <li>• Upload MP4 video files (max 1 minute 20 seconds)</li>
-                  <li>• No background music or additional audio tracks</li>
-                  <li>• Only MP4 format supported</li>
-                </ul>
-              </div>
+          {/* Instructions */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Upload Guidelines</h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <li>• Upload MP4 video files (max 1 minute 20 seconds)</li>
+              <li>• No background music or additional audio tracks</li>
+              <li>• Only MP4 format supported</li>
+            </ul>
+          </div>
 
-              <div className="space-y-2">
-                <Label>Video File</Label>
-                <div className="space-y-3">
-                  {selectedFile ? (
-                    <div className="border border-border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Video className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{selectedFile.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemoveFile}
-                          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+          <div className="space-y-2">
+            <Label>Video File</Label>
+            <div className="space-y-3">
+              {selectedFile ? (
+                <div className="border border-border rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Video className="h-5 w-5 text-primary" />
                       </div>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                      <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Choose a video file</p>
+                      <div>
+                        <p className="text-sm font-medium">{selectedFile.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          Drag & drop or click to browse
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
                       </div>
                     </div>
-                  )}
-                  
-                  <Input
-                    id="video-upload"
-                    type="file"
-                    accept="video/mp4,.mp4"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  
-                  {!selectedFile && (
                     <Button
-                      variant="outline"
-                      onClick={() => document.getElementById('video-upload')?.click()}
-                      className="w-full"
-                    >
-                      <Video className="h-4 w-4 mr-2" />
-                      Select Video File
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleUpload} 
-                  disabled={!selectedFile || isUploading}
-                  className="min-w-[120px]"
-                >
-                  {isUploading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Uploading to Cloudinary...
-                    </>
-                  ) : (
-                    'Upload Video'
-                  )}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Video URL Display and Get Data */}
-              <div className="space-y-4">
-                <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                  <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">Upload Successful!</h4>
-                  <p className="text-sm text-green-800 dark:text-green-200">
-                    Your video has been uploaded to Cloudinary. Now you can send it for processing.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Cloudinary Video URL</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      value={cloudinaryData?.url || ''}
-                      readOnly
-                      className="bg-muted"
-                    />
-                    <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => cloudinaryData?.url && navigator.clipboard.writeText(cloudinaryData.url)}
+                      onClick={handleRemoveFile}
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                     >
-                      <Link className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Folder</Label>
-                  <Input
-                    value={cloudinaryData?.folder || ''}
-                    readOnly
-                    className="bg-muted"
-                  />
+              ) : (
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                  <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Choose a video file</p>
+                    <p className="text-xs text-muted-foreground">
+                      Drag & drop or click to browse
+                    </p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline" onClick={handleCancel}>
-                  Close
-                </Button>
-                <Button 
-                  onClick={handleGetData} 
-                  disabled={isProcessing}
-                  className="min-w-[120px]"
+              )}
+              
+              <Input
+                id="video-upload"
+                type="file"
+                accept="video/mp4,.mp4"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              {!selectedFile && (
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('video-upload')?.click()}
+                  className="w-full"
                 >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    'Get Data'
-                  )}
+                  <Video className="h-4 w-4 mr-2" />
+                  Select Video File
                 </Button>
-              </div>
-            </>
-          )}
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSend} 
+              disabled={!selectedFile || isUploading}
+              className="min-w-[120px]"
+            >
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                'Send'
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
