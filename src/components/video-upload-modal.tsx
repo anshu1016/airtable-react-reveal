@@ -87,7 +87,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       const formData = new FormData();
       formData.append('video', selectedFile);
 
-      const response = await fetch('https://web-production-4bfe8.up.railway.app/upload-video', {
+      const response = await fetch('http://127.0.0.1:5000/upload-video', {
         method: 'POST',
         body: formData,
       });
