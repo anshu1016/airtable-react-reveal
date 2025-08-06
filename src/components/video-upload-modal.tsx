@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { X, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const checkVideoDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
@@ -94,13 +96,17 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       const formData = new FormData();
       formData.append('video', selectedFile);
 
-      const response = await fetch('http://127.0.0.1:5000/upload-video', {
+      const response = await fetch('https://web-production-4bfe8.up.railway.app/upload-video', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload video');
+        const errorData = await response.text();
+        throw new Error(`Upload failed: ${response.status} - ${errorData}`);
       }
 
       // Show processing status
@@ -110,25 +116,43 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         className: "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100",
       });
 
-      // Simulate processing delay and show success
+      // Get response data
+      const responseData = await response.json();
+      console.log('Upload successful:', responseData);
+
+      // Show success message and navigate to home
+      toast({
+        title: "✅ Video processed successfully!",
+        description: "Your video has been processed. Redirecting to home...",
+        className: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100",
+      });
+
+      // Close modal and navigate to home
       setTimeout(() => {
-        toast({
-          title: "✅ Video processed successfully!",
-          description: "Go to home screen to see your results.",
-          className: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100",
-        });
+        handleCancel();
+        navigate('/');
         
-        // Auto-close modal after success
+        // Show final success toast on home page
         setTimeout(() => {
-          handleCancel();
-        }, 1500);
-      }, 1000);
+          toast({
+            title: "🎉 Video Upload Complete",
+            description: "Your video has been successfully processed and is ready to view!",
+            className: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100",
+          });
+        }, 500);
+      }, 2000);
 
     } catch (error) {
       console.error('Upload error:', error);
+      
+      let errorMessage = "Failed to upload video. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Upload failed",
-        description: "Failed to upload video. Please try again.",
+        title: "❌ Upload Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
