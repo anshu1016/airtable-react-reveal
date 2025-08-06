@@ -46,10 +46,10 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         try {
           const duration = await checkVideoDuration(file);
           
-          if (duration > 80) { // 1 min 20 sec = 80 seconds
+          if (duration > 120) { // 2 minutes = 120 seconds
             toast({
               title: "Video too long",
-              description: "Please select a video that is less than 1 minute 20 seconds",
+              description: "Please select a video that is less than 2 minutes",
               variant: "destructive",
             });
             return;
@@ -99,14 +99,20 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       const response = await fetch('https://web-production-4bfe8.up.railway.app/upload-video', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
       });
 
+      // Check if response is ok (status 200-299)
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Upload failed: ${response.status} - ${errorData}`);
+        let errorMessage = `Upload failed with status ${response.status}`;
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage += `: ${errorText}`;
+          }
+        } catch (e) {
+          // If we can't read the error text, use the default message
+        }
+        throw new Error(errorMessage);
       }
 
       // Show processing status
@@ -116,9 +122,15 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         className: "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100",
       });
 
-      // Get response data
-      const responseData = await response.json();
-      console.log('Upload successful:', responseData);
+      // Try to parse response data (optional)
+      let responseData = null;
+      try {
+        responseData = await response.json();
+        console.log('Upload successful:', responseData);
+      } catch (e) {
+        // If response is not JSON, that's okay - the upload was still successful
+        console.log('Upload successful - non-JSON response');
+      }
 
       // Show success message and navigate to home
       toast({
@@ -183,7 +195,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Upload Guidelines</h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Upload MP4 video files (max 1 minute 20 seconds)</li>
+              <li>• Upload MP4 video files (max 2 minutes)</li>
               <li>• No background music or additional audio tracks</li>
               <li>• Only MP4 format supported</li>
             </ul>
