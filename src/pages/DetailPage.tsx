@@ -70,21 +70,43 @@ export const DetailPage: React.FC = () => {
   }
 
   const record = state.selectedRecord;
-  const title = record.fields.Name || 'Untitled Property';
-  const summary = record.fields.Notes || '';
-  const bhkType = record.fields.Assignee || '';
-  const propertyType = record.fields.Status || '';
-  const location = Array.isArray(record.fields['Attachment Summary']) 
-    ? record.fields['Attachment Summary'].join(', ') 
-    : record.fields['Attachment Summary'] || '';
+  console.log('🏠 DetailPage record data:', record);
+  
+  // Updated field mappings to match new schema
+  const title = record.fields.title || record.fields.Name || 'Untitled Property';
+  const summary = record.fields.summary || record.fields.Notes || '';
+  const bhkType = record.fields.bhk_type || record.fields.Assignee || '';
+  const propertyType = record.fields.property_type || record.fields.Status || '';
+  const location = Array.isArray(record.fields.location) 
+    ? record.fields.location.join(', ') 
+    : record.fields.location || record.fields['Attachment Summary'] || '';
   const priceEstimate = record.fields.price_estimate || 'Price on request';
-  const status = record.fields['status 2'] || '';
+  const status = record.fields.status || record.fields['status 2'] || '';
   const furnishedStatus = record.fields.furnished_status || '';
-  const areaSize = record.fields.Attachments || '';
-  const amenities = record.fields.amenities || [];
-  const highlights = record.fields.highlights ? record.fields.highlights.split(', ') : [];
+  const areaSize = record.fields.area_sqft || record.fields.Attachments || '';
+  const amenities = Array.isArray(record.fields.amenities) ? record.fields.amenities : [];
+  
+  // Handle highlights - now it's already an array in the new schema
+  const highlights = Array.isArray(record.fields.highlights) 
+    ? record.fields.highlights 
+    : (record.fields.highlights ? record.fields.highlights.split(', ') : []);
+    
   const screenshots = record.fields.screenshot_refs;
-  const imageUrl = screenshots ? `https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80` : null;
+  
+  // Handle image URL with fallback
+  const getImageUrl = (): string => {
+    if (screenshots) {
+      if (Array.isArray(screenshots) && screenshots.length > 0) {
+        return screenshots[0].url;
+      }
+      if (typeof screenshots === 'string' && screenshots.trim()) {
+        return screenshots;
+      }
+    }
+    return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80';
+  };
+  
+  const imageUrl = getImageUrl();
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
