@@ -32,13 +32,27 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
   const highlights = record.fields.highlights || [];
   const screenshots = record.fields.screenshot_refs;
   
-  // Handle image URL
-  const imageUrl = screenshots || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80';
+  // Handle image URL with error fallback
+  const getImageUrl = (): string => {
+    if (screenshots) {
+      // Handle both old format (array) and new format (string)
+      if (Array.isArray(screenshots) && screenshots.length > 0) {
+        return screenshots[0].url;
+      }
+      if (typeof screenshots === 'string' && screenshots.trim()) {
+        return screenshots;
+      }
+    }
+    return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80';
+  };
+  
+  const imageUrl = getImageUrl();
 
   // Get status badge styling
   const getStatusBadge = (status: string) => {
     const styles = {
       'Available': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      'For Sale': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       'Under Construction': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
       'Sold': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
       'For Rent': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
@@ -66,6 +80,10 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, className }) => 
             alt={title}
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
             loading="lazy"
+            onError={(e) => {
+              console.log('❌ Image failed to load:', imageUrl);
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80';
+            }}
           />
           {/* Image overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
