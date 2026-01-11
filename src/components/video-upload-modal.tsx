@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { X, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -96,23 +97,13 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       const formData = new FormData();
       formData.append('video', selectedFile);
 
-      const response = await fetch('https://web-production-4bfe8.up.railway.app/upload-video', {
-        method: 'POST',
+      // Use the backend proxy instead of direct Railway call
+      const { data, error } = await supabase.functions.invoke('video-upload-proxy', {
         body: formData,
       });
 
-      // Check if response is ok (status 200-299)
-      if (!response.ok) {
-        let errorMessage = `Upload failed with status ${response.status}`;
-        try {
-          const errorText = await response.text();
-          if (errorText) {
-            errorMessage += `: ${errorText}`;
-          }
-        } catch (e) {
-          // If we can't read the error text, use the default message
-        }
-        throw new Error(errorMessage);
+      if (error) {
+        throw new Error(error.message || 'Upload failed');
       }
 
       // Show processing status
@@ -122,15 +113,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         className: "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100",
       });
 
-      // Try to parse response data (optional)
-      let responseData = null;
-      try {
-        responseData = await response.json();
-        console.log('Upload successful:', responseData);
-      } catch (e) {
-        // If response is not JSON, that's okay - the upload was still successful
-        console.log('Upload successful - non-JSON response');
-      }
+      console.log('Upload successful:', data);
 
       // Show success message and navigate to home
       toast({

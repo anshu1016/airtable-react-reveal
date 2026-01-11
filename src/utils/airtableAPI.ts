@@ -1,89 +1,46 @@
-import axios from 'axios';
 import { AirtableResponse, AirtableRecord } from '../types/airtable';
 import { demoRecords } from './demoData';
+import { supabase } from '@/integrations/supabase/client';
 
-// These would typically come from environment variables
-// For demo purposes, we'll use placeholder values
-const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID || '';
-const AIRTABLE_API_TOKEN = import.meta.env.VITE_AIRTABLE_API_TOKEN || '';
-const TABLE_NAME = import.meta.env.VITE_TABLE_NAME || 'Imported Table';
-
-// Check if we have valid credentials (not placeholder values)
-const hasValidCredentials = AIRTABLE_BASE_ID !== '<BASE_ID_OF_THE_AIRTABLE_TABLE>' && 
-                           AIRTABLE_API_TOKEN !== 'your_api_token_here' &&
-                           AIRTABLE_BASE_ID && 
-                           AIRTABLE_API_TOKEN;
-
-const baseURL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
-
-const airtableClient = axios.create({
-  baseURL,
-  headers: {
-    'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
-    'Content-Type': 'application/json',
-  },
-});
+// Check if we should use the backend proxy (no credentials means use demo or proxy)
+const USE_DEMO_DATA = false; // Set to true to force demo data
 
 export const airtableAPI = {
   async getAllRecords(): Promise<AirtableRecord[]> {
-    console.log('🔍 Fetching all records...');
-    console.log('🔧 API Config:', {
-      baseId: AIRTABLE_BASE_ID ? `${AIRTABLE_BASE_ID.substring(0, 8)}...` : 'Not set',
-      token: AIRTABLE_API_TOKEN ? `${AIRTABLE_API_TOKEN.substring(0, 8)}...` : 'Not set',
-      tableName: TABLE_NAME,
-      hasValidCredentials
-    });
+    console.log('🔍 Fetching all records via backend proxy...');
 
-    // Use demo data if no valid credentials are provided
-    if (!hasValidCredentials) {
-      console.log('⚠️  Using demo data - configure VITE_AIRTABLE_BASE_ID and VITE_AIRTABLE_API_TOKEN to use real Airtable data');
-      // Simulate network delay for demo
+    if (USE_DEMO_DATA) {
+      console.log('⚠️  Using demo data');
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('📊 Demo data loaded:', demoRecords.length, 'records');
       return demoRecords;
     }
 
     try {
-      console.log('🌐 Making API request to:', `${baseURL}/${TABLE_NAME}`);
-      const response = await airtableClient.get<AirtableResponse>(`/${TABLE_NAME}`);
-      console.log('✅ API Response received:', {
-        status: response.status,
-        recordCount: response.data.records?.length || 0,
-        hasRecords: !!response.data.records
+      console.log('🌐 Making request via backend proxy');
+      const { data, error } = await supabase.functions.invoke('airtable-proxy', {
+        body: { action: 'getAllRecords' }
       });
-      console.log('📝 First record sample:', response.data.records?.[0]);
-      return response.data.records;
+
+      if (error) {
+        console.error('❌ Backend proxy error:', error);
+        throw new Error(error.message || 'Failed to fetch records');
+      }
+
+      const records = data.records || [];
+      console.log('✅ Records received:', records.length, 'records');
+      return records;
     } catch (error) {
       console.error('❌ Error fetching records:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('📋 Error details:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers
-          }
-        });
-      }
       throw new Error('Failed to fetch records from Airtable');
     }
   },
 
   async getRecord(recordId: string): Promise<AirtableRecord> {
-    console.log('🔍 Fetching single record:', recordId);
-    console.log('🔧 API Config:', {
-      baseId: AIRTABLE_BASE_ID ? `${AIRTABLE_BASE_ID.substring(0, 8)}...` : 'Not set',
-      token: AIRTABLE_API_TOKEN ? `${AIRTABLE_API_TOKEN.substring(0, 8)}...` : 'Not set',
-      tableName: TABLE_NAME,
-      hasValidCredentials
-    });
+    console.log('🔍 Fetching single record via backend proxy:', recordId);
 
-    // Use demo data if no valid credentials are provided
-    if (!hasValidCredentials) {
-      console.log('⚠️  Using demo data - configure VITE_AIRTABLE_BASE_ID and VITE_AIRTABLE_API_TOKEN to use real Airtable data');
-      // Simulate network delay for demo
+    if (USE_DEMO_DATA) {
+      console.log('⚠️  Using demo data');
       await new Promise(resolve => setTimeout(resolve, 800));
       const record = demoRecords.find(r => r.id === recordId);
       if (!record) {
@@ -95,29 +52,20 @@ export const airtableAPI = {
     }
 
     try {
-      console.log('🌐 Making API request to:', `${baseURL}/${TABLE_NAME}/${recordId}`);
-      const response = await airtableClient.get<AirtableRecord>(`/${TABLE_NAME}/${recordId}`);
-      console.log('✅ API Response received:', {
-        status: response.status,
-        recordId: response.data.id,
-        hasFields: !!response.data.fields
+      console.log('🌐 Making request via backend proxy');
+      const { data, error } = await supabase.functions.invoke('airtable-proxy', {
+        body: { action: 'getRecord', recordId }
       });
-      console.log('📝 Record data:', response.data);
-      return response.data;
+
+      if (error) {
+        console.error('❌ Backend proxy error:', error);
+        throw new Error(error.message || 'Failed to fetch record');
+      }
+
+      console.log('✅ Record received:', data);
+      return data;
     } catch (error) {
       console.error('❌ Error fetching record:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('📋 Error details:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers
-          }
-        });
-      }
       throw new Error('Failed to fetch record from Airtable');
     }
   },
