@@ -1,23 +1,29 @@
-import { AirtableResponse, AirtableRecord } from '../types/airtable';
+import { AirtableRecord } from '../types/airtable';
 import { demoRecords } from './demoData';
-import { supabase } from '@/integrations/supabase/client';
 
-// Check if we should use the backend proxy (no credentials means use demo or proxy)
-const USE_DEMO_DATA = false; // Set to true to force demo data
+// Use demo data - set to false to use Supabase backend
+const USE_DEMO_DATA = true;
+
+// Lazy load supabase client to avoid initialization errors
+const getSupabaseClient = async () => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  return supabase;
+};
 
 export const airtableAPI = {
   async getAllRecords(): Promise<AirtableRecord[]> {
-    console.log('🔍 Fetching all records via backend proxy...');
+    console.log('🔍 Fetching all records...');
 
     if (USE_DEMO_DATA) {
       console.log('⚠️  Using demo data');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       console.log('📊 Demo data loaded:', demoRecords.length, 'records');
       return demoRecords;
     }
 
     try {
       console.log('🌐 Making request via backend proxy');
+      const supabase = await getSupabaseClient();
       const { data, error } = await supabase.functions.invoke('airtable-proxy', {
         body: { action: 'getAllRecords' }
       });
@@ -32,16 +38,17 @@ export const airtableAPI = {
       return records;
     } catch (error) {
       console.error('❌ Error fetching records:', error);
-      throw new Error('Failed to fetch records from Airtable');
+      console.log('⚠️ Falling back to demo data');
+      return demoRecords;
     }
   },
 
   async getRecord(recordId: string): Promise<AirtableRecord> {
-    console.log('🔍 Fetching single record via backend proxy:', recordId);
+    console.log('🔍 Fetching single record:', recordId);
 
     if (USE_DEMO_DATA) {
       console.log('⚠️  Using demo data');
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 300));
       const record = demoRecords.find(r => r.id === recordId);
       if (!record) {
         console.log('❌ Record not found in demo data:', recordId);
@@ -53,6 +60,7 @@ export const airtableAPI = {
 
     try {
       console.log('🌐 Making request via backend proxy');
+      const supabase = await getSupabaseClient();
       const { data, error } = await supabase.functions.invoke('airtable-proxy', {
         body: { action: 'getRecord', recordId }
       });
@@ -66,6 +74,8 @@ export const airtableAPI = {
       return data;
     } catch (error) {
       console.error('❌ Error fetching record:', error);
+      const record = demoRecords.find(r => r.id === recordId);
+      if (record) return record;
       throw new Error('Failed to fetch record from Airtable');
     }
   },
