@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { X, Video, CheckCircle, Loader2, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from './ui/progress';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -30,9 +31,6 @@ interface BackendResponse {
 
 type UploadState = 'idle' | 'uploading' | 'processing' | 'queued' | 'error';
 
-// Configuration - can be moved to environment variables
-const CLOUDINARY_CLOUD_NAME = 'df9d8klxs';
-const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; // Use unsigned preset for direct upload
 const BACKEND_API_URL = 'http://127.0.0.1:5000/upload-video';
 
 export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ 
@@ -116,40 +114,33 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('resource_type', 'video');
-    formData.append('folder', 'pipeline/uploads');
 
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(progress);
-        }
+    // Simulate progress since edge function doesn't support XHR progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => Math.min(prev + 5, 90));
+    }, 500);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('cloudinary-upload', {
+        body: formData,
       });
 
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText);
-            resolve(response);
-          } catch {
-            reject(new Error('Invalid response from Cloudinary'));
-          }
-        } else {
-          reject(new Error(`Cloudinary upload failed: ${xhr.status}`));
-        }
-      });
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error during upload'));
-      });
+      if (error) {
+        throw new Error(error.message || 'Cloudinary upload failed');
+      }
 
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`);
-      xhr.send(formData);
-    });
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return data as CloudinaryResponse;
+    } catch (err) {
+      clearInterval(progressInterval);
+      throw err;
+    }
   };
 
   const triggerBackendProcessing = async (cloudinaryData: CloudinaryResponse): Promise<BackendResponse> => {
