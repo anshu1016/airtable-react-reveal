@@ -33,7 +33,7 @@ type UploadState = 'idle' | 'uploading' | 'processing' | 'queued' | 'error';
 // Configuration - can be moved to environment variables
 const CLOUDINARY_CLOUD_NAME = 'df9d8klxs';
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; // Use unsigned preset for direct upload
-const BACKEND_API_URL = 'http://localhost:5000/upload-video';
+const BACKEND_API_URL = 'http://127.0.0.1:5000/upload-video';
 
 export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ 
   open, 
